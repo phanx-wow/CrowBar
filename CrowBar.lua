@@ -3,9 +3,25 @@
 ----------------------------------------------------------------------]]
 
 local CROWBAR = ...
-local button, tooltip, tooltipLines
+
+local L = setmetatable({}, { __index = function(t, k)
+	local v = tostring(k)
+	t[k] = v
+	return v
+end })
+
+if GetLocale() == "deDE" then
+	L["<Ctrl-Click to ignore this item>"] = "<STRG-Klick, um diesen Gegenstand zu ignorieren>"
+	L["<Alt-Click and drag to move>"] = "<ALT-Klick und ziehen, um zu bewegen>"
+	L["Now ignoring %s for the rest of this session."] = "%s wird für den Rest dieser Sitzung ignoriert."
+elseif GetLocale():match("^es") then
+	L["<Ctrl-Click to ignore this item>"] = "<Ctrl-clic para ignorar este objetivo>"
+	L["<Alt-Click and drag to move>"] = "<Alt-clic y arrastre para mover>"
+	L["Now ignoring %s for the rest of this session."] = "%s será ignorardo por el resto de la sesión."
+end
 
 local DELAYTIME = 0.25
+local button, tooltip, tooltipLines
 local opening = GetSpellInfo(6247)
 local openStrings = {
 	[ITEM_OPENABLE] = true,
@@ -14,43 +30,68 @@ local openStrings = {
 local openSpells = {
 	[58168]  = true, -- Thick Shell Clam
 	[58172]  = true, -- Small Barnacled Clam
-	[98681]  = true, -- Chirping Box
 	[102923] = true, -- Heavy Junkbox
-	[109946] = true, -- Crystalline Geode
-	[109947] = true, -- Elementium-Coated Geode
 	[109948] = true, -- Perfect Geode
 	[126935] = true, -- Crate Restored Artifact
-	[131934] = true, -- Valor Points +15
 	[131935] = true, -- Valor Points +10
 	[131936] = true, -- Valor Points +5
-	[132278] = true, -- Relic of Guo-Lai
 	[136267] = true, -- Honor Points +250
-	[138417] = true, -- Stolen Shado-Pan Insignia
-	[138418] = true, -- Stolen Klaxxi Insignia
-	[138419] = true, -- Stolen Celestial Insignia
-	[138420] = true, -- Stolen Golden Lotus Insignia
-	[140143] = true, -- Sunreaver Offensive Insignia
-	[140144] = true, -- Greater Sunreaver Offensive Insignia
-	[140145] = true, -- Kirin Tor Offensive Insignia
-	[140147] = true, -- Greater Kirin Tor Offensive Insignia
-	[140152] = true, -- Shado-Pan Assault Insignia
-	[142397] = true, -- Heroic Cache of Treasures // 5.3 Scenario - Heroic - Push Loot
-	[142901] = true, -- Bulging Heroic Cache of Treasures // 5.3 Scenario - Heroic - Push Loot (Guaranteed Loot)
-	[168178] = true, -- Bag of Salvaged Goods // Salvage
 	[162367] = true, -- "Gain 25 Garrison Resources."
 	[170888] = true, -- "Gain 100 Garrison Resources."
 	[175836] = true, -- "Gain 50 Garrison Resources."
 	[176549] = true, -- "Gain 250 Garrison Resources."
 }
 
-local openItems = { -- Bugged items that don't show any "click to open" text
-	[89125] = true, -- Sack of Pet Supplies
-	[93146] = true, -- Pandaren Spirit Pet Supplies (Burning)
-	[93147] = true, -- Pandaren Spirit Pet Supplies (Flowing)
-	[93148] = true, -- Pandaren Spirit Pet Supplies (Whispering)
-	[93149] = true, -- Pandaren Spirit Pet Supplies (Thundering)
-	[94207] = true, -- Fabled Pandaren Pet Supplies
-	[98095] = true, -- Brawler's Pet Supplies
+local openItems = {
+	-- Bugged items that don't show any "click to open" text:
+	[89125]  = true, -- Sack of Pet Supplies
+	[93146]  = true, -- Pandaren Spirit Pet Supplies (Burning)
+	[93147]  = true, -- Pandaren Spirit Pet Supplies (Flowing)
+	[93148]  = true, -- Pandaren Spirit Pet Supplies (Whispering)
+	[93149]  = true, -- Pandaren Spirit Pet Supplies (Thundering)
+	[94207]  = true, -- Fabled Pandaren Pet Supplies
+	[98095]  = true, -- Brawler's Pet Supplies
+	-- Unique items: more efficient to check the itemID than scan for spell text.
+	[69838]  = true, -- Chirping Box
+	[78890]  = true, -- Crystalline Geode
+	[78891]  = true, -- Elementium-Coated Geode
+	[90816]  = true, -- Relic of the Thunder King
+	[90815]  = true, -- Relic of Guo-Lai
+	[90816]  = true, -- Relic of the Thunder King
+	[94223]  = true, -- Stolen Shado-Pan Insignia
+	[94225]  = true, -- Stolen Celestial Insignia
+	[94226]  = true, -- Stolen Klaxxi Insignia
+	[94227]  = true, -- Stolen Golden Lotus Insignia
+	[95487]  = true, -- Sunreaver Offensive Insignia
+	[95488]  = true, -- Greater Sunreaver Offensive Insignia
+	[95489]  = true, -- Kirin Tor Offensive Insignia
+	[95490]  = true, -- Greater Kirin Tor Offensive Insignia
+	[95496]  = true, -- Shado-Pan Assault Insignia
+	[97268]  = true, -- Tome of Valor
+	[98134]  = true, -- Heroic Cache of Treasures
+	[98546]  = true, -- Bulging Heroic Cache of Treasures
+	[114116] = true, -- Bag of Salvaged Goods
+	[117492] = true, -- Relic of Rukhmar
+}
+
+local combineItems = {
+  [89112]  = 10, -- Motes of Harmony
+  [115504] = 10, -- Fractured Temporal Crystal
+  [109991] = 10, -- True Iron Nugget
+  [109992] = 10, -- Blackrock Fragment
+  [2934]   = 3,  -- Ruined Leather Scraps
+  [25649]  = 5,  -- Knothide Leather Scraps
+  [33567]  = 5,  -- Borean Leather Scraps
+  [74493]  = 5,  -- Savage Leather
+  [159069] = 10, -- Raw Beast Hide Scraps
+  [111589] = 20, [111595] = 10, [111601] = 5, -- Crescent Saberfish
+  [111659] = 20, [111664] = 10, [111671] = 5, -- Abyssal Gulper Eel
+  [111652] = 20, [111667] = 10, [111674] = 5, -- Blind Lake Sturgeon
+  [111662] = 20, [111663] = 10, [111670] = 5, -- Blackwater Whiptail
+  [111658] = 20, [111665] = 10, [111672] = 5, -- Sea Scorpion
+  [111651] = 20, [111668] = 10, [111675] = 5, -- Fat Sleeper
+  [111656] = 20, [111666] = 10, [111673] = 5, -- Fire Ammonite
+  [111650] = 20, [111669] = 10, [111676] = 5, -- Jawless Skulker
 }
 
 local ignoreQuestItems = {
@@ -138,8 +179,8 @@ function CrowBar:PLAYER_LOGIN(event)
 				GameTooltip:SetPoint("TOPLEFT", self, "TOPRIGHT", 6, 2)
 			end
 			GameTooltip:SetBagItem(self.bag, self.slot)
-			GameTooltip:AddLine("<Ctrl-Click to ignore this item>")
-			GameTooltip:AddLine("<Alt-Click and drag to move>")
+			GameTooltip:AddLine(L["<Ctrl-Click to ignore this item>"])
+			GameTooltip:AddLine(L["<Alt-Click and drag to move>"])
 			GameTooltip:Show()
 		end
 	end)
@@ -149,7 +190,7 @@ function CrowBar:PLAYER_LOGIN(event)
 		if self.bag and self.slot and IsControlKeyDown() then
 			local id = GetContainerItemID(self.bag, self.slot)
 			ignoreQuestItems[id] = true
-			DEFAULT_CHAT_FRAME:AddMessage("|cff00ddbaCrowBar:|r Now ignoring " .. GetContainerItemLink(self.bag, self.slot) .. " for the rest of this session.")
+			DEFAULT_CHAT_FRAME:AddMessage("|cff00ddbaCrowBar:|r " .. format(L["Now ignoring %s for the rest of this session."], GetContainerItemLink(self.bag, self.slot)))
 			CrowBar:HideButton()
 			CrowBar:ScanBags()
 		end
@@ -157,7 +198,7 @@ function CrowBar:PLAYER_LOGIN(event)
 
 	self:RestorePosition()
 
-	for _, spellID in next, openSpells do
+	for spellID in next, openSpells do
 		local spelltext
 		tooltip:SetOwner(UIParent, "ANCHOR_NONE")
 		tooltip:SetSpellByID(spellID)
