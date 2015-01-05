@@ -4,4 +4,6 @@
 ## Notes: Open inventory items with 1 button
 ## Author: Ammo
 
+## SavedVariablesPerCharacter: CrowBarDB
+
 CrowBar.lua
