@@ -307,7 +307,7 @@ local function ShouldAcceptQuest(itemID, bag, slot)
 	end
 	-- Always show level 1 items since there's no way to check the quest level
 	local _, _, _, _, minLevel = GetItemInfo(itemID)
-	if not minLevel or minLevel == 1 then
+	if not minLevel or minLevel < 2 then -- can be 0 or 1
 		return true
 	end
 	-- Don't show quests the player's level is too low to accept
