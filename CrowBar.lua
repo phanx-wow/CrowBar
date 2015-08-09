@@ -37,6 +37,7 @@ local openSpells = {
 	[131936] = true, -- Valor Points +5
 	[136267] = true, -- Honor Points +250
 	[162367] = true, -- "Gain 25 Garrison Resources."
+	[168751] = true, -- "Create a soulbound item appropriate for your loot specialization."
 	[170888] = true, -- "Gain 100 Garrison Resources."
 	[175836] = true, -- "Gain 50 Garrison Resources."
 	[176549] = true, -- "Gain 250 Garrison Resources."
@@ -71,27 +72,32 @@ local openItems = {
 	[98134]  = true, -- Heroic Cache of Treasures
 	[98546]  = true, -- Bulging Heroic Cache of Treasures
 	[114116] = true, -- Bag of Salvaged Goods
+	[114119] = true, -- Crate of Salvage
+	[114120] = true, -- Big Crate of Salvage
 	[117492] = true, -- Relic of Rukhmar
+	[120301] = true, -- Armor Enhancement Token
+	[120302] = true, -- Weapon Enhancement Token
+	[122535] = true, -- Traveler's Pet Supplies
 }
 
 local combineItems = {
-  [89112]  = 10, -- Motes of Harmony
-  [115504] = 10, -- Fractured Temporal Crystal
-  [109991] = 10, -- True Iron Nugget
-  [109992] = 10, -- Blackrock Fragment
   [2934]   = 3,  -- Ruined Leather Scraps
   [25649]  = 5,  -- Knothide Leather Scraps
   [33567]  = 5,  -- Borean Leather Scraps
   [74493]  = 5,  -- Savage Leather
+  [89112]  = 10, -- Mote of Harmony
+  [109991] = 10, -- True Iron Nugget
+  [109992] = 10, -- Blackrock Fragment
+  [115504] = 10, -- Fractured Temporal Crystal
   [159069] = 10, -- Raw Beast Hide Scraps
-  [111589] = 20, [111595] = 10, [111601] = 5, -- Crescent Saberfish
-  [111659] = 20, [111664] = 10, [111671] = 5, -- Abyssal Gulper Eel
-  [111652] = 20, [111667] = 10, [111674] = 5, -- Blind Lake Sturgeon
-  [111662] = 20, [111663] = 10, [111670] = 5, -- Blackwater Whiptail
-  [111658] = 20, [111665] = 10, [111672] = 5, -- Sea Scorpion
-  [111651] = 20, [111668] = 10, [111675] = 5, -- Fat Sleeper
-  [111656] = 20, [111666] = 10, [111673] = 5, -- Fire Ammonite
-  [111650] = 20, [111669] = 10, [111676] = 5, -- Jawless Skulker
+  [111589] = 5, [111595] = 5, [111601] = 5, -- Crescent Saberfish
+  [111659] = 5, [111664] = 5, [111671] = 5, -- Abyssal Gulper Eel
+  [111652] = 5, [111667] = 5, [111674] = 5, -- Blind Lake Sturgeon
+  [111662] = 5, [111663] = 5, [111670] = 5, -- Blackwater Whiptail
+  [111658] = 5, [111665] = 5, [111672] = 5, -- Sea Scorpion
+  [111651] = 5, [111668] = 5, [111675] = 5, -- Fat Sleeper
+  [111656] = 5, [111666] = 5, [111673] = 5, -- Fire Ammonite
+  [111650] = 5, [111669] = 5, [111676] = 5, -- Jawless Skulker
 }
 
 local ignoreQuestItems = {
@@ -270,7 +276,11 @@ end
 
 ------------------------------------------------------------------------
 
-local ITEM_COOLDOWN = " " .. ITEM_COOLDOWN_TOTAL:gsub("%%s", ".+"):gsub("([%(%)])", "%%%1")
+local ITEM_REQ_CLASS = "^" .. ITEM_CLASSES_ALLOWED:gsub("%%s", ".+")
+local ITEM_REQ_LEVEL = "^" .. ITEM_MIN_LEVEL:gsub("%%d", "%d+")
+local ITEM_REQ_SKILL = "^" .. ITEM_MIN_SKILL:gsub("%%%d$[sd]", ".+")
+
+local ITEM_COOLDOWN  = " " .. ITEM_COOLDOWN_TOTAL:gsub("%%s", ".+"):gsub("([%(%)])", "%%%1")
 
 local CURRENT_BAG, CURRENT_SLOT
 
@@ -283,6 +293,13 @@ setmetatable(openItems, { __index = function(t, itemID)
 		text = gsub(text, ITEM_COOLDOWN, "") -- Tome of Valor, le sigh
 		if openStrings[text] then
 			openable = true
+		elseif strmatch(text, ITEM_REQ_CLASS) or strmatch(text, ITEM_REQ_LEVEL) then
+			local r, g, b = tooltipLines[i]:GetTextColor()
+			if r > 0.95 and g < 0.15 and b < 0.15 then
+				-- some requirement not met, don't show
+				openable = false
+				break
+			end
 		end
 	end
 	t[itemID] = openable
