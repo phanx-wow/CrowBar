@@ -78,6 +78,7 @@ local openItems = {
 	[120301] = true, -- Armor Enhancement Token
 	[120302] = true, -- Weapon Enhancement Token
 	[122535] = true, -- Traveler's Pet Supplies
+	[127751] = true, -- Fel-Touched Pet Supplies
 }
 
 local combineItems = {
