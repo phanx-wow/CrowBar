@@ -88,6 +88,7 @@ local combineItems = {
   [33567]  = 5,  -- Borean Leather Scraps
   [74493]  = 5,  -- Savage Leather
   [89112]  = 10, -- Mote of Harmony
+  [109624] = 10, -- Broken Frostweed Stem
   [109991] = 10, -- True Iron Nugget
   [109992] = 10, -- Blackrock Fragment
   [115504] = 10, -- Fractured Temporal Crystal
@@ -354,8 +355,13 @@ function CrowBar:ScanBags()
 	for bag = 0, 4 do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local itemID = GetContainerItemID(bag, slot)
-			if itemID and not ignoreQuestItems[itemID] and (IsOpenable(itemID, bag, slot) or ShouldAcceptQuest(itemID, bag, slot)) then
-				return self:SetButton(bag, slot)
+			if itemID and not ignoreQuestItems[itemID] then
+				local have, need = GetItemCount(itemID), combineItems[itemID]
+				if need and have >= need then
+					return self:SetButton(bag, slot, floor(have / need))
+				elseif IsOpenable(itemID, bag, slot) or ShouldAcceptQuest(itemID, bag, slot) then
+					return self:SetButton(bag, slot)
+				end
 			end
 		end
 	end
@@ -364,7 +370,7 @@ end
 
 ------------------------------------------------------------------------
 
-function CrowBar:SetButton(bag, slot)
+function CrowBar:SetButton(bag, slot, displayCount)
 	if InCombatLockdown() then return end
 	--print("CrowBar:SetButton", bag, slot, GetContainerItemLink(bag, slot))
 	button.bag, button.slot = bag, slot
@@ -372,12 +378,17 @@ function CrowBar:SetButton(bag, slot)
 	local icon, _, _, _, _, _, link = GetContainerItemInfo(bag, slot)
 	button.icon:SetTexture(icon or "Interface\\Icons\\INV_Box_02")
 
-	local count = GetItemCount(link)
+	local count = displayCount or GetItemCount(link)
 	button.count:SetText(count > 1 and count or "")
 
 	button:SetAttribute("type", "macro")
 	button:SetAttribute("macrotext", format("/run ClearCursor() if MerchantFrame:IsShown() then HideUIPanel(MerchantFrame) end\n/use %d %d", bag, slot))
 	button:Show()
+	
+	if button:IsMouseOver() then
+		button:GetScript("OnLeave")(button)
+		button:GetScript("OnEnter")(button)
+	end
 end
 
 function CrowBar:HideButton()
