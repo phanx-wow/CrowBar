@@ -230,13 +230,16 @@ function CrowBar:PLAYER_LOGIN(event)
 	self.QUEST_ACCEPTED = self.Show
 
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-	self.PLAYER_REGEN_DISABLED = self.OnEnterCombat
-
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
-	self.PLAYER_REGEN_ENABLED = self.OnLeaveCombat
+
+	self:RegisterEvent("PET_BATTLE_OPENING_START")
+	self.PET_BATTLE_OPENING_START = self.PLAYER_REGEN_DISABLED
+
+	self:RegisterEvent("PET_BATTLE_CLOSE")
+	self.PET_BATTLE_CLOSE = self.PLAYER_REGEN_ENABLED
 
 	if not UnitAffectingCombat("player") then
-		self:OnLeaveCombat()
+		self:PLAYER_REGEN_ENABLED()
 	end
 end
 
@@ -253,8 +256,8 @@ CrowBar:SetScript("OnUpdate", function(self, elapsed)
 	end
 end)
 
-function CrowBar:OnEnterCombat(event)
-	--print("CrowBar:OnEnterCombat")
+function CrowBar:PLAYER_REGEN_DISABLED(event)
+	--print("CrowBar:PLAYER_REGEN_DISABLED")
 	self:UnregisterEvent("UNIT_SPELLCAST_FAILED")
 	self:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
 	self:UnregisterEvent("UNIT_SPELLCAST_STOP")
@@ -262,8 +265,8 @@ function CrowBar:OnEnterCombat(event)
 	self:HideButton()
 end
 
-function CrowBar:OnLeaveCombat(event)
-	--print("CrowBar:OnLeaveCombat")
+function CrowBar:PLAYER_REGEN_ENABLED(event)
+	--print("CrowBar:PLAYER_REGEN_ENABLED")
 	self:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player")
 	self:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
 	self:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")
@@ -384,7 +387,7 @@ function CrowBar:SetButton(bag, slot, displayCount)
 	button:SetAttribute("type", "macro")
 	button:SetAttribute("macrotext", format("/run ClearCursor() if MerchantFrame:IsShown() then HideUIPanel(MerchantFrame) end\n/use %d %d", bag, slot))
 	button:Show()
-	
+
 	if button:IsMouseOver() then
 		button:GetScript("OnLeave")(button)
 		button:GetScript("OnEnter")(button)
