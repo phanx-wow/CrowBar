@@ -1,4 +1,4 @@
-## Interface: 60200
+## Interface: 70000
 
 ## Title: CrowBar |cff00ddbaMOD|r
 ## Notes: Open inventory items with 1 button

@@ -93,6 +93,7 @@ local combineItems = {
   [109992] = 10, -- Blackrock Fragment
   [115504] = 10, -- Fractured Temporal Crystal
   [159069] = 10, -- Raw Beast Hide Scraps
+  --[[
   [111589] = 5, [111595] = 5, [111601] = 5, -- Crescent Saberfish
   [111659] = 5, [111664] = 5, [111671] = 5, -- Abyssal Gulper Eel
   [111652] = 5, [111667] = 5, [111674] = 5, -- Blind Lake Sturgeon
@@ -101,6 +102,7 @@ local combineItems = {
   [111651] = 5, [111668] = 5, [111675] = 5, -- Fat Sleeper
   [111656] = 5, [111666] = 5, [111673] = 5, -- Fire Ammonite
   [111650] = 5, [111669] = 5, [111676] = 5, -- Jawless Skulker
+  ]]
 }
 
 local ignoreQuestItems = {
@@ -385,7 +387,7 @@ function CrowBar:SetButton(bag, slot, displayCount)
 	button.count:SetText(count > 1 and count or "")
 
 	button:SetAttribute("type", "macro")
-	button:SetAttribute("macrotext", format("/run ClearCursor() if MerchantFrame:IsShown() then HideUIPanel(MerchantFrame) end\n/use %d %d", bag, slot))
+	button:SetAttribute("macrotext", format("/stopmacro [mod:ctrl]\n/run ClearCursor() if MerchantFrame:IsShown() then HideUIPanel(MerchantFrame) end\n/use %d %d", bag, slot))
 	button:Show()
 
 	if button:IsMouseOver() then
