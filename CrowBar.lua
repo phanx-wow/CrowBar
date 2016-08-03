@@ -156,12 +156,12 @@ function CrowBar:PLAYER_LOGIN(event)
 	button.icon = CrowBarButtonIcon
 	button.icon:SetTexture("Interface\\Icons\\INV_Box_02")
 
-	if PhanxBorder then
+	if LibStub("Masque", true) then
+		LibStub("Masque"):Group(CROWBAR):AddButton(button)
+	elseif PhanxBorder then
 		button.icon:SetTexture(0.04, 0.96, 0.04, 0.96)
 		button:GetNormalTexture():SetTexture(nil)
 		PhanxBorder.AddBorder(button)
-	elseif LibStub("Masque", true) then
-		LibStub("Masque"):Group(CROWBAR):AddButton(button)
 	end
 
 	button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
