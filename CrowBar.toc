@@ -1,4 +1,4 @@
-## Interface: 70100
+## Interface: 70300
 
 ## Title: CrowBar |cff00ddbaMOD|r
 ## Notes: Open inventory items with 1 button
@@ -6,4 +6,5 @@
 
 ## SavedVariablesPerCharacter: CrowBarDB
 
-CrowBar.lua
+data.lua
+core.lua
